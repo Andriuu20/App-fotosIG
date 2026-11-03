@@ -36,3 +36,20 @@ test('siempre hay ideas del momento del día, sin repetir', () => {
     for (const i of ideas) assert.ok(i.tips.length > 0);
   }
 });
+
+test('banco de frases: 3 tonos y canciones para cada idea', async () => {
+  const { offlineCaptions, _test } = await import('../src/lib/offlineCaptions.ts');
+  const ids = [...Object.keys(_test.CATEGORIA_DE), 'desconocida', undefined];
+  for (const id of ids) {
+    const r = offlineCaptions(id);
+    assert.deepEqual(r.frases.map((f) => f.tono), ['positiva', 'graciosa', 'poetica']);
+    assert.ok(r.frases.every((f) => f.texto.length > 0));
+    assert.ok(r.canciones.length >= 2 && r.canciones.length <= 3);
+    assert.equal(new Set(r.canciones.map((c) => c.titulo)).size, r.canciones.length);
+  }
+  // Todas las ideas de suggestions.ts tienen categoría en el banco.
+  for (const h of [0, 8, 13, 19]) {
+    for (const i of suggestionsFor({ now: at(h), weather: 'lluvia', goldenHourStart: at(h), sunset: at(h + 1) }))
+      assert.ok(i.id in _test.CATEGORIA_DE, i.id);
+  }
+});

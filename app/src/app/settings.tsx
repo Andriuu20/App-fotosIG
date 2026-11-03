@@ -136,8 +136,8 @@ export default function SettingsScreen() {
       <Card style={styles.card}>
         <Text style={styles.muted}>
           {captionsConfigured()
-            ? '✓ Servidor configurado.'
-            : 'Sin configurar: define EXPO_PUBLIC_CAPTION_API_URL (mira el README).'}
+            ? '✓ Usando IA (servidor configurado). Si falla, se usan las frases de la app.'
+            : 'Usando frases y canciones de la app (gratis, sin IA). Para activar la IA, mira el README.'}
         </Text>
       </Card>
     </ScrollView>

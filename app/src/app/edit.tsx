@@ -15,7 +15,8 @@ import {
 } from 'react-native';
 
 import { Button, Card, colors } from '../components/ui';
-import { TONO_LABEL, fetchCaptions, type CaptionResult } from '../lib/caption';
+import { TONO_LABEL, captionsConfigured, fetchCaptions, type CaptionResult } from '../lib/caption';
+import { offlineCaptions } from '../lib/offlineCaptions';
 import {
   DEFAULT_STYLE_IDS,
   STYLES,
@@ -82,19 +83,30 @@ export default function EditScreen() {
     };
   }, [photo, format]);
 
-  // 2) Frases y canciones con IA (solo en modo "foto con texto").
+  // 2) Frases y canciones (solo en modo "foto con texto").
+  //    Sin servidor configurado: banco de frases de la app (gratis, sin IA).
+  //    Con servidor: IA con visión y, si falla, el banco como respaldo.
+  const [captionNote, setCaptionNote] = useState<string | null>(null);
   const loadCaptions = useCallback(async () => {
     if (!photo) return;
     setCaptionError(null);
-    setCaptions(null);
-    try {
-      const b64 = await smallBase64(photo.uri);
-      const result = await fetchCaptions(b64, flow.suggestion?.title);
+    setCaptionNote(null);
+    const show = (result: CaptionResult) => {
       setCaptions(result);
       setFraseIndex(result.frases.length ? 0 : null);
       setCancionIndex(result.canciones.length ? 0 : null);
-    } catch (e) {
-      setCaptionError(e instanceof Error ? e.message : 'No se pudieron cargar las frases');
+    };
+    if (!captionsConfigured()) {
+      show(offlineCaptions(flow.suggestion?.id));
+      return;
+    }
+    setCaptions(null);
+    try {
+      const b64 = await smallBase64(photo.uri);
+      show(await fetchCaptions(b64, flow.suggestion?.title));
+    } catch {
+      show(offlineCaptions(flow.suggestion?.id));
+      setCaptionNote('La IA no está disponible ahora: te proponemos frases de nuestra selección.');
     }
   }, [photo]);
 
@@ -204,6 +216,7 @@ export default function EditScreen() {
               <Text style={styles.muted}>Mirando tu foto…</Text>
             </View>
           )}
+          {captionNote && <Text style={styles.muted}>{captionNote}</Text>}
           {captionError && (
             <>
               <Text style={styles.error}>{captionError}</Text>
@@ -233,12 +246,15 @@ export default function EditScreen() {
                   <Text style={styles.optionText}>
                     🎵 {c.titulo} — {c.artista}
                   </Text>
-                  <Text style={styles.muted}>{c.motivo}</Text>
+                  {c.motivo ? <Text style={styles.muted}>{c.motivo}</Text> : null}
                 </Pressable>
               ))}
               <Text style={styles.muted}>
                 Añade la canción desde el sticker de música de Instagram al publicar.
               </Text>
+              <Pressable onPress={loadCaptions} hitSlop={10}>
+                <Text style={styles.other}>🔄 Otras frases y canciones</Text>
+              </Pressable>
             </>
           )}
         </Card>
@@ -286,6 +302,7 @@ const styles = StyleSheet.create({
   row: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   muted: { color: colors.muted, fontSize: 14 },
   error: { color: '#C0392B' },
+  other: { color: colors.accent, fontWeight: '600', fontSize: 15, marginTop: 4 },
   option: { borderWidth: 1, borderColor: colors.border, borderRadius: 12, padding: 12, gap: 4 },
   optionSelected: { borderColor: colors.accent, backgroundColor: colors.accentSoft },
   optionLabel: { fontSize: 13, color: colors.muted, fontWeight: '600' },

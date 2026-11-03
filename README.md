@@ -16,7 +16,8 @@ Flujo: **sugerencia → cámara con guía → 3 versiones mejoradas → 3 frases
 | Guía de encuadre en directo | `app/src/components/FramingGuide.tsx` | Cuadrícula de tercios, nivel del horizonte (acelerómetro) y consejos de la idea ("acércate", "centra la taza"…) |
 | Versiones mejoradas | `app/src/lib/filters.ts` | Recorte 4:5 (publicación) o 9:16 (historia) + 3 estilos (Luz limpia, Dorado, Película) con Skia, todo en el móvil |
 | Marca de agua sutil | Ajustes | Logo pequeño semitransparente, esquina a elegir, se puede quitar |
-| Frases y canciones con IA | `server/api/caption.ts` | La app envía la foto reducida (768 px) al servidor, que llama a Claude con visión y devuelve JSON validado |
+| Frases y canciones (gratis) | `app/src/lib/offlineCaptions.ts` | Banco de frases y canciones dentro de la app, elegidas según la idea de foto. Sin servidor ni coste |
+| Frases y canciones con IA (opcional) | `server/api/caption.ts` | Si configuras el servidor, la app envía la foto reducida (768 px) y Claude propone frases según lo que ve. Si falla, se usa el banco |
 | Compartir | Pantalla "Tu foto" | Hoja de compartir del sistema (Instagram, WhatsApp, TikTok…). La frase se copia al portapapeles y la canción se añade con el sticker de música de Instagram |
 | Galería privada | `app/src/lib/gallery.ts` | Las fotos se guardan solo dentro de la app |
 
@@ -45,10 +46,10 @@ Escanea el QR con **Expo Go** (Android/iPhone); todas las librerías usadas vien
 Si algo nativo (por ejemplo las notificaciones en Android) no funciona en Expo Go, crea una
 *development build* con `npx expo run:android` o `npx eas-cli build --profile development`.
 
-Sin servidor configurado la app funciona igual; solo el modo "foto con frase y canción"
-mostrará un aviso en lugar de las frases.
+**No hace falta nada de pago para probarla**: sin servidor, el modo "foto con frase y canción"
+usa el banco de frases y canciones de la propia app.
 
-## Servidor de frases y canciones
+## (Opcional, de pago) Servidor de frases y canciones con IA
 
 ```bash
 cd server
